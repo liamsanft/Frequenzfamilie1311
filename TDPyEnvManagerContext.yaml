@@ -1,0 +1,6 @@
+contextVersion: 2
+mode: Python vEnv
+envName: .venv
+installPath: .
+pythonVersion: '3.11'
+autoSetup: false
