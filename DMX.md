@@ -9,7 +9,7 @@ Im Interface, oben (Parameter am Projekt-COMP `Frequenzfamilie1311`, Seite **DMX
 
 | Parameter | Standard | Bedeutung |
 |---|---|---|
-| **Mode** | Manual | `Manual (this interface)`: die Regler im Interface gelten. `DMX (Art-Net)`: die Kanäle unten gelten. |
+| **Mode** | Manual | `Manual (this interface)`: die Regler im Interface gelten. `DMX (Art-Net)`: die Kanäle unten gelten, empfangen per Art-Net. `OSC (MadMapper DMX To OSC)`: dieselben Kanäle, empfangen per OSC (siehe MadMapper). Art-Net ist im OSC-Modus aus. |
 | **Net** | 0 | Art-Net Net (0-127) |
 | **Subnet** | 0 | Art-Net Subnet (0-15) |
 | **Universe** | 0 | Art-Net Universe (0-15) |
@@ -66,7 +66,21 @@ Bei anderem Start Channel verschiebt sich der ganze Block (Start Channel 10: Dim
 
 ## MadMapper
 
-**Auf demselben Mac (Probe, Entwicklung):** Art-Net nutzt Port 6454 zum Senden und Empfangen, zwei Programme dürfen ihn nicht auf derselben Adresse öffnen. Deshalb: in TouchDesigner **Network Adapter = `127.0.0.1`**. In MadMapper (*Preferences > Project > DMX*): Device **ArtNet**, Interface die echte Karte (z.B. `Wireless (en0)`), **Use Unicast** an, in der Geräteliste ein Gerät **IP `127.0.0.1`, Univ. 0, Active**, **Enable Universe Synchronization** aus. Steht dort "Failed to bind sockets on ArtNet Port", hält TouchDesigner den Port auf allen Karten (Network Adapter leer): Adapter auf `127.0.0.1` stellen.
+**Auf demselben Mac: per OSC statt Art-Net (stabil).** Art-Net sendet und empfängt auf UDP 6454, MadMapper und
+TouchDesigner streiten sich dort um den Port (mal klappt es, mal nicht). OSC hat den Konflikt nicht: nur TouchDesigner
+lauscht (UDP 7000), MadMapper sendet nur. Der Art-Net-Ausgang zu den Tubes bleibt unberührt.
+
+1. MadMapper *Preferences > Project > OSC*, **OSC Outputs** `+`: Name `TouchDesigner`, IP `127.0.0.1`, Port `7000`.
+2. Modul **DMX To OSC** hinzufügen: DMX Universe `0`, Channel Mode `8 Bits`, **Normalize aus** (Werte 0-255),
+   Target > Device `TouchDesigner`, Address `/myAddress`.
+3. In TouchDesigner **Mode = OSC**. Kanal n kommt als `myAddress<n>` an (CHOP `dmx/oscin_madmapper`); die Kanalbelegung
+   unten gilt unverändert, **Start Channel gilt nur für Art-Net** (OSC beginnt immer bei Kanal 1).
+
+Das Modul sendet das DMX-Universum, das MadMapper ausgibt, also den Fixture-Block aus dem Abschnitt unten.
+
+**Art-Net (Pult oder anderer Rechner):** Mode `DMX (Art-Net)`, Einstellungen wie im nächsten Absatz.
+
+**Auf demselben Mac per Art-Net (nicht empfohlen):** Art-Net nutzt Port 6454 zum Senden und Empfangen, zwei Programme dürfen ihn nicht auf derselben Adresse öffnen. Deshalb: in TouchDesigner **Network Adapter = `127.0.0.1`**. In MadMapper (*Preferences > Project > DMX*): Device **ArtNet**, Interface die echte Karte (z.B. `Wireless (en0)`), **Use Unicast** an, in der Geräteliste ein Gerät **IP `127.0.0.1`, Univ. 0, Active**, **Enable Universe Synchronization** aus. Steht dort "Failed to bind sockets on ArtNet Port", hält TouchDesigner den Port auf allen Karten (Network Adapter leer): Adapter auf `127.0.0.1` stellen.
 
 **In der Show (Pult oder MadMapper auf einem anderen Rechner im Netz):** **Network Adapter leer** oder die IP der Karte im Show-Netz, und MadMapper/das Pult sendet an die IP dieses Rechners (oder Broadcast). `127.0.0.1` funktioniert dort nicht.
 
@@ -97,8 +111,9 @@ berechneten wirksamen Werte `dmx/null_control` (Namen: `r`, `g`, `b`, `output`, 
 
 ## Wo es technisch liegt
 
-`/Frequenzfamilie1311/dmx`: `dmxin_all` (Empfang) -> `script_dmx` (Kanäle -> Werte im jeweiligen Bereich,
-Code in `script_dmx_callbacks`) und `constant_manual` (Werte aus den Interface-Parametern) -> `switch_source`
+`/Frequenzfamilie1311/dmx`: `dmxin_all` (Art-Net-Empfang, nur im DMX-Modus aktiv) -> `script_dmx` und
+`oscin_madmapper` (OSC-Empfang) -> `script_osc` (beide: Kanäle -> Werte im jeweiligen Bereich, derselbe Code in
+`script_dmx_callbacks`) und `constant_manual` (Werte aus den Interface-Parametern) -> `switch_source`
 (Mode) -> `null_control` (die wirksamen Werte). Planet (`planet/select_colour`), Effekte (`fx/glsl_*`) und
 der Output-Schalter (`Onair` am Projekt-COMP) lesen nur noch `null_control`. Die Überblendung Mond/Planet
 läuft in `fx` (`constant_target` -> `lag_mix` -> `null_mix`, `chopexec_mix`).
