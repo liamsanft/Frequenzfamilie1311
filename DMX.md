@@ -14,7 +14,7 @@ Im Interface, oben (Parameter am Projekt-COMP `Frequenzfamilie1311`, Seite **DMX
 | **Subnet** | 0 | Art-Net Subnet (0-15) |
 | **Universe** | 0 | Art-Net Universe (0-15) |
 | **Start Channel** | 1 | Erster Kanal des 9er-Blocks (1-504) |
-| **Network Adapter** | leer = alle | Auf welcher Netzwerkkarte (IP dieses Rechners) Art-Net gehört wird. Bei Problemen die Karte wählen, die im Netz des Pults liegt. |
+| **Network Adapter (IP)** | leer = alle | IP der Netzwerkkarte, auf der Art-Net gehört wird. **Leer** = alle Karten (Show-Netzwerk mit Pult). **`127.0.0.1`** = nur dieser Mac (MadMapper läuft auf demselben Rechner). Auswahl per Dropdown oder einfach tippen. |
 | **Listening On** | (nur Anzeige) | Aktuelle Adresse, z.B. `Net 0 / Sub 0 / Uni 0 (Art-Net universe 0) channels 1-9` |
 | **Channel Values** | (nur Anzeige) | Wie viele der 9 Kanäle gerade einen Wert über 0 haben. 0 = nichts (oder nur Nullen) angekommen. Zuletzt empfangene Werte bleiben stehen. |
 
@@ -65,6 +65,12 @@ rendern beide, danach pausiert der nicht sichtbare (kein Rendering). Es gibt nur
 Bei anderem Start Channel verschiebt sich der ganze Block (Start Channel 10: Dimmer = 10, Output = 18).
 
 ## MadMapper
+
+**Auf demselben Mac (Probe, Entwicklung):** Art-Net nutzt Port 6454 zum Senden und Empfangen, zwei Programme dürfen ihn nicht auf derselben Adresse öffnen. Deshalb: in TouchDesigner **Network Adapter = `127.0.0.1`**. In MadMapper (*Preferences > Project > DMX*): Device **ArtNet**, Interface die echte Karte (z.B. `Wireless (en0)`), **Use Unicast** an, in der Geräteliste ein Gerät **IP `127.0.0.1`, Univ. 0, Active**, **Enable Universe Synchronization** aus. Steht dort "Failed to bind sockets on ArtNet Port", hält TouchDesigner den Port auf allen Karten (Network Adapter leer): Adapter auf `127.0.0.1` stellen.
+
+**In der Show (Pult oder MadMapper auf einem anderen Rechner im Netz):** **Network Adapter leer** oder die IP der Karte im Show-Netz, und MadMapper/das Pult sendet an die IP dieses Rechners (oder Broadcast). `127.0.0.1` funktioniert dort nicht.
+
+Fixture in MadMapper:
 
 Ein Fixture mit 9 Kanälen vom Typ **Slider** (8 Bit), Universe 0, Startadresse 1, Art-Net einschalten
 (*Preferences > Project > DMX*). R/G/B/L/W-Kanäle nicht verwenden, die nehmen ihren Wert aus dem Bild.
