@@ -1,2 +1,3 @@
 path	type	strategy	rel_file_path	timestamp	dirty	build	touch_build	node_x	node_y	node_color
 /Frequenzfamilie1311/externalizations	table	tsv	Frequenzfamilie1311/externalizations.tsv	2026-11-12 12:41:21 UTC				-200	0	0.9000,0.3000,0.4000
+/Frequenzfamilie1311/startup	execute	py	Frequenzfamilie1311/startup.py	2026-11-12 22:20:29 UTC				-200	-400	0.9000,0.3000,0.4000
